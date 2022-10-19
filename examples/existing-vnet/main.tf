@@ -20,6 +20,25 @@ module "global" {
   }
 }
 
+module "network" {
+  source = "github.com/aztfmods/module-azurerm-vnet"
+
+  naming = {
+    company = local.naming.company
+    env     = local.naming.env
+    region  = local.naming.region
+  }
+
+  vnets = {
+    demo = {
+      cidr          = ["10.0.0.0/16"]
+      location      = module.global.groups.agw.location
+      resourcegroup = module.global.groups.agw.name
+    }
+  }
+  depends_on = [module.global]
+}
+
 module "agw" {
   source = "../../"
 
@@ -32,9 +51,14 @@ module "agw" {
   agw = {
     location      = module.global.groups.agw.location
     resourcegroup = module.global.groups.agw.name
-    cidr          = { vnet = ["10.0.0.0/16"], snet = ["10.0.0.0/27"] }
     waf           = { enabled = true, mode = "Detection" }
     capacity      = { min = 1, max = 2 }
+    subnet_cidr   = ["10.0.0.0/27"]
+
+    vnet = {
+      name   = lookup(module.network.vnets.demo, "name", null)
+      rgname = lookup(module.network.vnets.demo, "resource_group_name", null)
+    }
 
     applications = {
       app1 = { hostname = "app1.com", bepoolips = [], priority = "10000", subject = "CN=app1.pilot.org", issuer = "Self" }

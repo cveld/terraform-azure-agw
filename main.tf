@@ -9,21 +9,23 @@ data "azurerm_resource_group" "rg" {
 }
 
 #----------------------------------------------------------------------------------------
-# Vnet / subnets
+# existing vnet
 #----------------------------------------------------------------------------------------
 
-resource "azurerm_virtual_network" "vnet" {
-  name                = "vnet-${var.naming.company}-${var.naming.env}-${var.naming.region}"
-  resource_group_name = data.azurerm_resource_group.rg.name
-  location            = data.azurerm_resource_group.rg.location
-  address_space       = var.agw.cidr.vnet
+data "azurerm_virtual_network" "vnet" {
+  name                = var.agw.vnet.name
+  resource_group_name = var.agw.vnet.rgname
 }
+
+#----------------------------------------------------------------------------------------
+# subnets
+#----------------------------------------------------------------------------------------
 
 resource "azurerm_subnet" "subnet" {
   name                 = "sn-${var.naming.company}-${var.naming.env}-${var.naming.region}"
   resource_group_name  = data.azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = var.agw.cidr.snet
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
+  address_prefixes     = var.agw.subnet_cidr
 }
 
 # ----------------------------------------------------------------------------------------
