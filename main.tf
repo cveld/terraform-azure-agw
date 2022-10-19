@@ -1,16 +1,11 @@
-provider "azurerm" {
-  features {}
-}
-
 data "azurerm_client_config" "current" {}
 
 #----------------------------------------------------------------------------------------
 # resourcegroup
 #----------------------------------------------------------------------------------------
 
-resource "azurerm_resource_group" "rg" {
-  name     = var.resourcegroup
-  location = var.agw.location
+data "azurerm_resource_group" "rg" {
+  name = var.agw.resourcegroup
 }
 
 #----------------------------------------------------------------------------------------
@@ -18,15 +13,15 @@ resource "azurerm_resource_group" "rg" {
 #----------------------------------------------------------------------------------------
 
 resource "azurerm_virtual_network" "vnet" {
-  name                = "vnet-${var.env}-001"
-  resource_group_name = azurerm_resource_group.rg.name
+  name                = "vnet-${var.naming.company}-${var.naming.env}-${var.naming.region}"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
   address_space       = var.agw.cidr.vnet
-  location            = azurerm_resource_group.rg.location
 }
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "sn-${var.env}-001"
-  resource_group_name  = azurerm_resource_group.rg.name
+  name                 = "sn-${var.naming.company}-${var.naming.env}-${var.naming.region}"
+  resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = var.agw.cidr.snet
 }
@@ -36,9 +31,9 @@ resource "azurerm_subnet" "subnet" {
 # ----------------------------------------------------------------------------------------
 
 resource "azurerm_public_ip" "pip" {
-  name                = "pip-agw-${var.env}"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  name                = "pip-${var.naming.company}-${var.naming.env}-${var.naming.region}"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
   allocation_method   = "Static"
   sku                 = "Standard"
 }
@@ -48,9 +43,9 @@ resource "azurerm_public_ip" "pip" {
 # ----------------------------------------------------------------------------------------
 
 resource "azurerm_user_assigned_identity" "mi" {
-  name                = "mi-agw-${var.env}"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  name                = "mi-${var.naming.company}-${var.naming.env}-${var.naming.region}"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
 }
 
 #----------------------------------------------------------------------------------------
@@ -70,9 +65,9 @@ resource "random_string" "random" {
 # ----------------------------------------------------------------------------------------
 
 resource "azurerm_key_vault" "kv" {
-  name                = "kv${var.env}${random_string.random.result}"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  name                = "kv${var.naming.company}${var.naming.env}${var.naming.region}${random_string.random.result}"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
   sku_name            = "standard"
   tenant_id           = data.azurerm_client_config.current.tenant_id
 }
@@ -175,7 +170,7 @@ resource "azurerm_key_vault_certificate_issuer" "issuer" {
 resource "azurerm_key_vault_certificate" "cert" {
   for_each = try(var.agw.applications, {})
 
-  name         = "cert-${each.key}-prd-${var.region}"
+  name         = "cert-${var.naming.company}-${each.key}-${var.naming.env}-${var.naming.region}"
   key_vault_id = azurerm_key_vault.kv.id
 
   certificate_policy {
@@ -215,9 +210,9 @@ resource "azurerm_key_vault_certificate" "cert" {
 # ----------------------------------------------------------------------------------------
 
 resource "azurerm_application_gateway" "application_gateway" {
-  name                = "agw-prd-${var.region}-001"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  name                = "agw-${var.naming.company}-${var.naming.env}-${var.naming.region}"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
   firewall_policy_id  = azurerm_web_application_firewall_policy.waf_policy.id
 
   sku {
@@ -241,12 +236,12 @@ resource "azurerm_application_gateway" "application_gateway" {
   }
 
   frontend_ip_configuration {
-    name                 = "feip-prd-${var.region}-001"
+    name                 = "feip-prd-${var.naming.region}-001"
     public_ip_address_id = azurerm_public_ip.pip.id
   }
 
   frontend_port {
-    name = "fep-prd-${var.region}-001"
+    name = "fep-prd-${var.naming.region}-001"
     port = 443
   }
 
@@ -276,8 +271,8 @@ resource "azurerm_application_gateway" "application_gateway" {
 
     content {
       name                           = http_listener.value.http_listener_name
-      frontend_ip_configuration_name = "feip-prd-${var.region}-001"
-      frontend_port_name             = "fep-prd-${var.region}-001"
+      frontend_ip_configuration_name = "feip-prd-${var.naming.region}-001"
+      frontend_port_name             = "fep-prd-${var.naming.region}-001"
       host_name                      = http_listener.value.http_listener_host_name
       protocol                       = "Https"
       ssl_certificate_name           = http_listener.value.ssl_certificate_name
@@ -321,9 +316,9 @@ resource "azurerm_application_gateway" "application_gateway" {
 # ----------------------------------------------------------------------------------------
 
 resource "azurerm_web_application_firewall_policy" "waf_policy" {
-  name                = "waf-prd-${var.region}-001"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  name                = "waf-${var.naming.company}-${var.naming.env}-${var.naming.region}"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
 
   policy_settings {
     enabled = var.agw.waf.enabled
