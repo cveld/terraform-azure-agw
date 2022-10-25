@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0](https://github.com/aztfmods/module-azurerm-agw/compare/v1.0.0...v1.1.0) (2022-10-25)
+
+
+### Features
+
+* add consistent naming ([#7](https://github.com/aztfmods/module-azurerm-agw/issues/7)) ([0fd7c71](https://github.com/aztfmods/module-azurerm-agw/commit/0fd7c71cce1a88a9bc4936a8d7888bf00f4d5a0e))
+* add diagnostics integration ([#10](https://github.com/aztfmods/module-azurerm-agw/issues/10)) ([0a3d3b0](https://github.com/aztfmods/module-azurerm-agw/commit/0a3d3b01e61239285abf4f12944bed8f938e9e7b))
+* add network integration ([#8](https://github.com/aztfmods/module-azurerm-agw/issues/8)) ([634c6f8](https://github.com/aztfmods/module-azurerm-agw/commit/634c6f897b1e2e8de0387a21d3e00da40763850a))
+* add reusable workflows ([#5](https://github.com/aztfmods/module-azurerm-agw/issues/5)) ([017727f](https://github.com/aztfmods/module-azurerm-agw/commit/017727fda5bb403d1a108719cf396eeeae537ef0))
+
 ## 1.0.0 (2022-09-15)
 
 
