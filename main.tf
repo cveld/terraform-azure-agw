@@ -217,19 +217,21 @@ resource "azurerm_application_gateway" "application_gateway" {
   location            = data.azurerm_resource_group.rg.location
   firewall_policy_id  = azurerm_web_application_firewall_policy.waf_policy.id
 
+  enable_http2 = try(var.agw.enable.http2, false)
+
   sku {
-    name = "WAF_v2"
-    tier = "WAF_v2"
+    name = var.agw.sku.name
+    tier = var.agw.sku.tier
+  }
+
+  autoscale_configuration {
+    min_capacity = var.agw.autoscale.min_capacity
+    max_capacity = var.agw.autoscale.max_capacity
   }
 
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.mi.id]
-  }
-
-  autoscale_configuration {
-    max_capacity = var.agw.capacity.max
-    min_capacity = var.agw.capacity.min
   }
 
   gateway_ip_configuration {
@@ -238,12 +240,12 @@ resource "azurerm_application_gateway" "application_gateway" {
   }
 
   frontend_ip_configuration {
-    name                 = "feip-prd-${var.naming.region}-001"
+    name                 = "feip-${var.naming.region}-001"
     public_ip_address_id = azurerm_public_ip.pip.id
   }
 
   frontend_port {
-    name = "fep-prd-${var.naming.region}-001"
+    name = "fep-${var.naming.region}-001"
     port = 443
   }
 
@@ -273,8 +275,8 @@ resource "azurerm_application_gateway" "application_gateway" {
 
     content {
       name                           = http_listener.value.http_listener_name
-      frontend_ip_configuration_name = "feip-prd-${var.naming.region}-001"
-      frontend_port_name             = "fep-prd-${var.naming.region}-001"
+      frontend_ip_configuration_name = "feip-${var.naming.region}-001"
+      frontend_port_name             = "fep-${var.naming.region}-001"
       host_name                      = http_listener.value.http_listener_host_name
       protocol                       = "Https"
       ssl_certificate_name           = http_listener.value.ssl_certificate_name
@@ -306,6 +308,7 @@ resource "azurerm_application_gateway" "application_gateway" {
       priority                   = request_routing_rule.value.priority
     }
   }
+
   lifecycle {
     ignore_changes = [
       waf_configuration,
@@ -323,8 +326,8 @@ resource "azurerm_web_application_firewall_policy" "waf_policy" {
   location            = data.azurerm_resource_group.rg.location
 
   policy_settings {
-    enabled = var.agw.waf.enabled
-    mode    = var.agw.waf.mode
+    enabled = var.agw.enable.waf
+    mode    = var.agw.waf_policy_mode
   }
 
   managed_rules {

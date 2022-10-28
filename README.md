@@ -9,7 +9,7 @@ The below features are made available:
 - Single application gateway deployment
 - Certificate generation for each application
 - WAF policy integrated
-- [Selfsigned](#usage-single-agw-multiple-applications-selfsigned-certificate) or [CA integrated](#usage-single-agw-multiple-applications-integrated-ca) certificates from keyvault
+- [Selfsigned](#usage-single-agw-multiple-applications-selfsigned-certificate),[CA integrated](#usage-single-agw-multiple-applications-integrated-ca) certificates from keyvault
 - [multiple](#usage-single-agw-multiple-applications-integrated-ca) applications using config
 - [terratest](https://terratest.gruntwork.io) is used to validate different integrations
 

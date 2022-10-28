@@ -49,11 +49,17 @@ module "agw" {
   }
 
   agw = {
-    location      = module.global.groups.agw.location
-    resourcegroup = module.global.groups.agw.name
-    waf           = { enabled = true, mode = "Detection" }
-    capacity      = { min = 1, max = 2 }
-    subnet_cidr   = ["10.0.0.0/27"]
+    location        = module.global.groups.agw.location
+    resourcegroup   = module.global.groups.agw.name
+    waf_policy_mode = "Detection"
+    subnet_cidr     = ["10.0.0.0/27"]
+    sku             = { name = "WAF_v2", tier = "WAF_v2" }
+    autoscale       = { min_capacity = 1, max_capacity = 2 }
+
+    enable = {
+      waf   = true
+      http2 = true
+    }
 
     vnet = {
       name   = lookup(module.network.vnets.demo, "name", null)
