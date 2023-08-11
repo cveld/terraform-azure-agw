@@ -69,6 +69,7 @@ module "agw" {
         priority  = "10000"
         subject   = "cn=app1.pilot.org"
         issuer    = "self"
+
         rewrite_rule_sets = {
           set1 = {
             rules = {
