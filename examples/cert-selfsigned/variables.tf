@@ -1,7 +1,3 @@
-variable "agw" {
-  type = any
-}
-
 variable "workload" {
   type = string
 }
