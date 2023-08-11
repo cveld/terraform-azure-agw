@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/aztfmods/terraform-azure-agw/compare/v1.1.0...v1.2.0) (2023-08-11)
+
+
+### Features
+
+* complete refactor ([#12](https://github.com/aztfmods/terraform-azure-agw/issues/12)) ([63ff177](https://github.com/aztfmods/terraform-azure-agw/commit/63ff177637c410da3c8ec463672ee11aceb21606))
+
 ## [1.1.0](https://github.com/aztfmods/module-azurerm-agw/compare/v1.0.0...v1.1.0) (2022-10-25)
 
 
