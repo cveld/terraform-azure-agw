@@ -33,24 +33,6 @@ module "network" {
   }
 }
 
-module "kv" {
-  source = "github.com/aztfmods/terraform-azure-kv?ref=v1.10.0"
-
-  workload    = var.workload
-  environment = var.environment
-
-  vault = {
-    location      = module.rg.groups.demo.location
-    resourcegroup = module.rg.groups.demo.name
-
-    contacts = {
-      admin = {
-        email = "dennis.kool@cloudnation.nl"
-      }
-    }
-  }
-}
-
 module "agw" {
   source = "../../"
 
@@ -60,7 +42,6 @@ module "agw" {
   agw = {
     location      = module.rg.groups.demo.location
     resourcegroup = module.rg.groups.demo.name
-    keyvault      = module.kv.vault.id
     subnet        = module.network.subnets.agw.id
 
     applications = {

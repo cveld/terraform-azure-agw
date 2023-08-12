@@ -2,8 +2,6 @@
 
 This Terraform module streamlines the creation and management of azure application gateway resources, offering tailored options for routing, ssl termination, load balancing, and web application firewall configurations.
 
-By encapsulating these complex functionalities into easy-to-use settings, this module enables rapid and reliable deployment, all managed through code.
-
 ## Goals
 
 The main objective is to create a more logic data structure, achieved by combining and grouping related resources together in a complex object.
@@ -36,12 +34,42 @@ module "agw" {
   agw = {
     location      = module.rg.groups.demo.location
     resourcegroup = module.rg.groups.demo.name
-    keyvault      = module.kv.vault.id
     subnet        = module.network.subnets.agw.id
 
     applications = {
       app1 = { hostname = "app1.com", bepoolips = [], priority = "10000", subject = "CN=app1.pilot.org", issuer = "self" }
       app2 = { hostname = "app2.com", bepoolips = [], priority = "20000", subject = "CN=app2.pilot.org", issuer = "self" }
+    }
+  }
+}
+```
+
+## Usage: certificate issuers
+
+```hcl
+module "agw" {
+  source = "github.com/aztfmods/terraform-azure-agw?ref=v1.2.0"
+
+  workload    = var.workload
+  environment = var.environment
+
+  agw = {
+    location      = module.rg.groups.demo.location
+    resourcegroup = module.rg.groups.demo.name
+    subnet        = module.network.subnets.agw.id
+
+    issuers = {
+      digicert = {
+        org_id     = "12345"
+        provider   = "DigiCert"
+        account_id = "12345"
+        password   = "12345"
+      }
+    }
+
+    applications = {
+      app1 = { hostname = "app1.com", bepoolips = [], priority = "10000", subject = "CN=app1.pilot.org", issuer = "DigiCert" }
+      app2 = { hostname = "app2.com", bepoolips = [], priority = "20000", subject = "CN=app2.pilot.org", issuer = "DigiCert" }
     }
   }
 }
@@ -144,6 +172,7 @@ module "agw" {
 | [azurerm_key_vault_certificate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) | resource |
 | [azurerm_application_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway) | resource |
 | [azurerm_web_application_firewall_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/web_application_firewall_policy) | resource |
+| [azurerm_key_vault_certificate_issuer](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate_issuer) | resource |
 
 ## Data Sources
 

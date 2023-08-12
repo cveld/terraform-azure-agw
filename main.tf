@@ -18,15 +18,53 @@ resource "azurerm_user_assigned_identity" "mi" {
 
 # role assignments
 resource "azurerm_role_assignment" "mi_role_assignment" {
-  scope                = var.agw.keyvault
+  scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Administrator"
   principal_id         = azurerm_user_assigned_identity.mi.principal_id
 }
 
 resource "azurerm_role_assignment" "spn_role_assignment" {
-  scope                = var.agw.keyvault
+  scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
+}
+
+# random id
+resource "random_string" "random" {
+  length    = 3
+  min_lower = 3
+  special   = false
+  numeric   = false
+  upper     = false
+}
+
+# keyvault
+resource "azurerm_key_vault" "kv" {
+  name                      = "kv-${var.workload}-${var.environment}-${random_string.random.result}"
+  location                  = var.agw.location
+  resource_group_name       = var.agw.resourcegroup
+  sku_name                  = "standard"
+  tenant_id                 = data.azurerm_client_config.current.tenant_id
+  enable_rbac_authorization = true
+}
+
+# certificate issuers
+resource "azurerm_key_vault_certificate_issuer" "issuer" {
+  for_each = {
+    for issuer in local.issuers : issuer.issuer_key => issuer
+  }
+
+  name          = each.value.name
+  org_id        = each.value.org_id
+  key_vault_id  = each.value.key_vault_id
+  provider_name = each.value.provider_name
+  account_id    = each.value.account_id
+  password      = each.value.password //pat certificate authority
+
+  depends_on = [
+    azurerm_role_assignment.mi_role_assignment,
+    azurerm_role_assignment.spn_role_assignment
+  ]
 }
 
 # keyvault certificate
@@ -34,7 +72,7 @@ resource "azurerm_key_vault_certificate" "cert" {
   for_each = try(var.agw.applications, {})
 
   name         = "cert-${var.workload}-${each.key}-${var.environment}"
-  key_vault_id = var.agw.keyvault
+  key_vault_id = azurerm_key_vault.kv.id
 
   certificate_policy {
     issuer_parameters {
@@ -55,12 +93,9 @@ resource "azurerm_key_vault_certificate" "cert" {
       validity_in_months = try(each.value.validity_in_months, 12)
 
       key_usage = try(each.value.key_usage, [
-        "cRLSign",
-        "dataEncipherment",
-        "digitalSignature",
-        "keyAgreement",
-        "keyCertSign",
-        "keyEncipherment",
+        "cRLSign", "dataEncipherment",
+        "digitalSignature", "keyAgreement",
+        "keyCertSign", "keyEncipherment",
       ])
     }
   }
@@ -253,25 +288,3 @@ resource "azurerm_web_application_firewall_policy" "waf_policy" {
     }
   }
 }
-
-# .TODO: decide what to do
-
-# generate password CA token
-#resource "random_string" "randomca" {
-#  length    = 12
-#  min_lower = 6
-#  special   = true
-#  numeric   = true
-#  upper     = true
-#}
-
-#resource "azurerm_key_vault_secret" "pat" {
-#  name         = "ca-pat"
-#  value        = random_string.randomca.result
-#  key_vault_id = azurerm_key_vault.kv.id
-
-#  depends_on = [
-#    azurerm_key_vault_access_policy.polspn,
-#    azurerm_key_vault_access_policy.polmi
-# ]
-#}

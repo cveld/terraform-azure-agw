@@ -33,33 +33,6 @@ module "network" {
   }
 }
 
-module "kv" {
-  source = "github.com/aztfmods/terraform-azure-kv?ref=v1.10.0"
-
-  workload    = var.workload
-  environment = var.environment
-
-  vault = {
-    location      = module.rg.groups.demo.location
-    resourcegroup = module.rg.groups.demo.name
-
-    issuers = {
-      digicert = {
-        org_id     = "12345"
-        provider   = "DigiCert"
-        account_id = "12345"
-        password   = "12345"
-      }
-    }
-
-    contacts = {
-      admin = {
-        email = "dennis.kool@cloudnation.nl"
-      }
-    }
-  }
-}
-
 module "agw" {
   source = "../../"
 
@@ -69,8 +42,16 @@ module "agw" {
   agw = {
     location      = module.rg.groups.demo.location
     resourcegroup = module.rg.groups.demo.name
-    keyvault      = module.kv.vault.id
     subnet        = module.network.subnets.agw.id
+
+    issuers = {
+      digicert = {
+        org_id     = "12345"
+        provider   = "DigiCert"
+        account_id = "12345"
+        password   = "12345"
+      }
+    }
 
     applications = {
       app1 = { hostname = "app1.com", bepoolips = [], priority = "10000", subject = "CN=app1.pilot.org", issuer = "DigiCert" }

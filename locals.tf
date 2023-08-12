@@ -70,4 +70,17 @@ locals {
   rewrite_rule_sets_map = {
     for app_key, app in local.app_gateway : app_key => app.rewrite_rule_sets
   }
+
+  issuers = flatten([
+    for issuer_key, issuer in try(var.agw.issuers, {}) : {
+
+      issuer_key    = issuer_key
+      name          = "issuer-${var.workload}-${issuer_key}-${var.environment}"
+      key_vault_id  = azurerm_key_vault.kv.id
+      provider_name = issuer.provider
+      account_id    = try(issuer.account_id, null)
+      password      = try(issuer.password, null)
+      org_id        = try(issuer.org_id, null)
+    }
+  ])
 }
