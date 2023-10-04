@@ -62,8 +62,7 @@ resource "azurerm_key_vault_certificate_issuer" "issuer" {
   password      = each.value.password //pat certificate authority
 
   depends_on = [
-    azurerm_role_assignment.mi_role_assignment,
-    azurerm_role_assignment.spn_role_assignment
+    azurerm_role_assignment.mi_role_assignment
   ]
 }
 
@@ -100,8 +99,7 @@ resource "azurerm_key_vault_certificate" "cert" {
     }
   }
   depends_on = [
-    azurerm_role_assignment.mi_role_assignment,
-    azurerm_role_assignment.spn_role_assignment
+    azurerm_role_assignment.mi_role_assignment
   ]
 }
 
