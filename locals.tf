@@ -1,6 +1,6 @@
 locals {
   app_gateway = [
-    for app_key, app in var.agw.applications : {
+    for app_key, app in try(var.agw.applications, {}) : {
       app_key                 = app_key
       http_listener_name      = "listener-${app_key}"
       http_listener_host_name = app.hostname
@@ -59,7 +59,7 @@ locals {
   ]
 
   routing_rules_map = [
-    for app_key, app in var.agw.applications : {
+    for app_key, app in try(var.agw.applications, {}) : {
       app_key               = app_key,
       routerulename         = "rule-${app_key}",
       priority              = app.priority,
