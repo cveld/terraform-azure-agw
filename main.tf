@@ -1,5 +1,3 @@
-data "azurerm_client_config" "current" {}
-
 # public ip
 resource "azurerm_public_ip" "pip" {
   name                = "pip-${var.workload}-${var.environment}"
@@ -18,7 +16,7 @@ resource "azurerm_user_assigned_identity" "mi" {
 
 # role assignments
 resource "azurerm_role_assignment" "mi_role_assignment" {
-  scope                = azurerm_key_vault.kv.id
+  scope                = var.agw.key_vault_id
   role_definition_name = "Key Vault Administrator"
   principal_id         = azurerm_user_assigned_identity.mi.principal_id
 }
@@ -36,16 +34,6 @@ resource "random_string" "random" {
   special   = false
   numeric   = false
   upper     = false
-}
-
-# keyvault
-resource "azurerm_key_vault" "kv" {
-  name                      = "kv-${var.workload}-${var.environment}-${random_string.random.result}"
-  location                  = var.agw.location
-  resource_group_name       = var.agw.resourcegroup
-  sku_name                  = "standard"
-  tenant_id                 = data.azurerm_client_config.current.tenant_id
-  enable_rbac_authorization = true
 }
 
 # certificate issuers
@@ -71,7 +59,7 @@ resource "azurerm_key_vault_certificate" "cert" {
   for_each = try(var.agw.applications, {})
 
   name         = "cert-${var.workload}-${each.key}-${var.environment}"
-  key_vault_id = azurerm_key_vault.kv.id
+  key_vault_id = var.agw.key_vault_id
 
   certificate_policy {
     issuer_parameters {
